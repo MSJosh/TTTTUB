@@ -1,0 +1,10 @@
+AuditLogs
+| where TimeGenerated > ago(1d) //Can Change date 
+| where Category == "ApplicationManagement"
+| where OperationName == "Update application – Certificates and secrets management " //New Cert Requested
+| where Result == "success" //Can change to failure to get failed requests
+| extend UserPrincipalName = InitiatedBy.user.userPrincipalName
+| extend IPAddress = InitiatedBy.user.ipAddress
+| extend AppDisplayName = TargetResources[0].displayName
+| extend UserAgent = AdditionalDetails[0].value
+| project TimeGenerated, Identity,  UserPrincipalName, OperationName, IPAddress, AppDisplayName, UserAgent
