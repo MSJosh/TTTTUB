@@ -1,0 +1,15 @@
+AuditLogs
+| where TimeGenerated > ago(30d) //Can change time range
+| where Category == "ApplicationManagement"
+| where OperationName == "Add application" 
+| where Result == "success" //Can change if looking for attempts
+| extend UserPrincipalName = InitiatedBy.user.userPrincipalName
+| extend UserId = tostring(InitiatedBy.user.id)
+| extend IPAddress = InitiatedBy.user.ipAddress
+| extend AppDisplayName = TargetResources[0].displayName
+| extend UserAgent = AdditionalDetails[0].value
+| join kind=leftouter ( AADUserRiskEvents
+| where TimeGenerated >ago(7d)
+| summarize Risks = make_set(RiskEventType), FirstRisk = min(TimeGenerated), LastRisk = max(TimeGenerated) by UserId
+) on UserId
+| project TimeGenerated, Identity, UserPrincipalName, UserId, IPAddress, AppDisplayName, UserAgent, Risks, FirstRisk, LastRisk
