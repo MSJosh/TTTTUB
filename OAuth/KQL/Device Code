@@ -1,0 +1,4 @@
+SigninLogs
+| where TimeGenerated > ago(90d) //Can change range to desired amount
+| where AuthenticationProtocol == "deviceCode"
+| project TimeGenerated, UserPrincipalName, AppDisplayName, ResourceDisplayName, ResultType, IPAddress, Location
