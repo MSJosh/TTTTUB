@@ -1,0 +1,5 @@
+List activities in MS office post token request.  
+
+OfficeActivity
+| where AppId == "5d661950-3475-41cd-a2c3-d671a3162bc1" //Get APPID from previous request or from Entra ID. 
+| project TimeGenerated, UserId, Operation, ClientInfoString, Client_IPAddress, OfficeWorkload
