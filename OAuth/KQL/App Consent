@@ -1,0 +1,17 @@
+Auditlogs with AAD/Entra ID
+
+AuditLogs
+| where TimeGenerated > ago(90d) //Can change time range to whenever
+| where OperationName == "Consent to application"
+| extend ActorUPN = InitiatedBy.user.userPrincipalName
+| extend ActorIP = InitiatedBy.user.ipAddress
+| extend ActorID = InitiatedBy.user.id
+| extend Application = TargetResources[0].displayName
+| extend ApplicationId = TargetResources[0].id
+| mv-expand ExpandedTargets = TargetResources[0].modifiedProperties
+| where ExpandedTargets.displayName startswith "ConsentAction.Permissions"
+| mv-expand Consents=ExpandedTargets.newValue
+| extend Consents = split(Consents, "],")
+| mv-expand Consents
+| parse-kv Consents as (ClientId:string, PrincipalId: string, ResourceId: string, ConsentType:string, Scope:string) with (pair_delimiter=',', kv_delimiter=':')
+| project TimeGenerated, Application, ApplicationId, ActorUPN, ActorID, ActorIP, Result, ClientId, PrincipalId, ResourceId, ConsentType, Scope, ResultReason
