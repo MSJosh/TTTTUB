@@ -1,5 +1,6 @@
 //Track when application is allowed and provides details on app and resource
 
+
 AuditLogs
 | where TimeGenerated > ago(1d) //Can change time range to whenever
 | where OperationName == "Consent to application"
