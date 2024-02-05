@@ -7,4 +7,9 @@ AuditLogs
 | extend IPAddress = InitiatedBy.user.ipAddress
 | extend AppDisplayName = TargetResources[0].displayName
 | extend UserAgent = AdditionalDetails[0].value
-| project TimeGenerated, Identity,  UserPrincipalName, OperationName, IPAddress, AppDisplayName, UserAgent
+//add if you want to limit to new keys
+//| extend NoKey = tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[1].oldValue)
+//| extend NewKey = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[1].newValue)))
+//| where NewKey contains ""
+| project TimeGenerated, UserPrincipalName, IPAddress, AppDisplayName, OperationName, UserAgent
+
