@@ -1,5 +1,5 @@
 //Query to find applications that have had delegated permissions granted to them
-
+//https://learn.microsoft.com/en-us/powershell/microsoftgraph/tutorial-grant-delegated-api-permissions?view=graph-powershell-1.0
 //Data connector required for this query - Azure Active Directory - Audit Logs
 
 AuditLogs
@@ -7,4 +7,7 @@ AuditLogs
 | where OperationName has "Add delegated permission grant"
 | extend UpdatedPermissions = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[0].newValue))) 
 | extend AppId = tostring(TargetResources[1].id)
-| project TimeGenerated, UpdatedPermissions, OperationName, AppId
+| extend AppName = tostring(TargetResources[0].displayName)
+| extend ipAddress = tostring(parse_json(tostring(InitiatedBy.user)).ipAddress)
+| extend userPrincipalName = tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName)
+| project TimeGenerated, UpdatedPermissions, OperationName, AppName, AppId, ipAddress, userPrincipalName
