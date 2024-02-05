@@ -1,11 +1,14 @@
 //Query to find applications that have had application permissions granted to them
-
+//https://learn.microsoft.com/en-us/graph/api/serviceprincipal-post-approleassignments?view=graph-rest-1.0&tabs=http
 //Data connector required for this query - Azure Active Directory - Audit Logs
 
 AuditLogs
 | where OperationName has "Add app role assignment to service principal"
 | extend UpdatedPermission = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[1].newValue)))
-| extend AppName = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties))[4].newValue)))
 | extend User = tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName)
 | extend AppId = tostring(TargetResources[1].id)
-| project TimeGenerated, OperationName, UpdatedPermission, AppName, AppId, User
+| extend ipAddress = tostring(parse_json(tostring(InitiatedBy.user)).ipAddress)
+| extend UserID = tostring(parse_json(tostring(InitiatedBy.user)).id)
+| extend type = tostring(TargetResources[0].type)
+| extend Changes = tostring(parse_json(tostring(parse_json(tostring(TargetResources[0].modifiedProperties)))))
+| project TimeGenerated, OperationName, UpdatedPermission, Changes, AppId, User, UserID
