@@ -1,4 +1,0 @@
-Utilizes Defender for Office logs 
-
-union UrlClickEvents, EmailUrlInfo
-| where Url =~ "https://www.microsoft.com/devicelogin" or Url startswith "https://login.microsoftonline.com/common/oauth2/deviceauth"

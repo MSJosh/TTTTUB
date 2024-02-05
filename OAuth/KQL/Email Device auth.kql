@@ -1,0 +1,5 @@
+Utilizes Defender logs
+
+union UrlClickEvents, EmailUrlInfo, DeviceNetworkEvents
+| where Timestamp > ago(7d) //Can change time range
+| where Url =~ "https://www.microsoft.com/devicelogin" or Url startswith "https://login.microsoftonline.com/common/oauth2/deviceauth" or RemoteUrl contains "microsoft.com/devicelogin" or RemoteUrl contains "microsoftonline.com/common/oauth2/deviceauth"
