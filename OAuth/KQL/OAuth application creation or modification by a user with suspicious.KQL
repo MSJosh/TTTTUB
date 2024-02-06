@@ -1,0 +1,26 @@
+//The AADSignInEventsBeta table is currently in beta and is being offered on a short-term basis to allow you to hunt through Microsoft Entra sign-in events. Customers need to have a Microsoft Entra ID P2 license to collect and view activities for this table. All sign-in schema information will eventually move to the IdentityLogonEvents table.
+
+//Needs to be done in Defender portal
+
+AADSignInEventsBeta   
+| where Timestamp >ago (60d) //Can change date to lesser date
+| where ErrorCode == 0   
+| where RiskLevelDuringSignIn >= 50   
+| project SignInTime=AccountUpn, AccountObjectId, SessionId, RiskLevelDuringSignIn, ApplicationId, Application   
+| join kind=leftouter
+(CloudAppEvents | where Timestamp > ago(60d) //Need to match above timestamp
+| where ActionType in ("Add application.", "Update application.","Update application – Certificates and secrets management ")   
+| extend appId =
+tostring(parse_json(RawEventData.Target[4].ID)) 
+| project   
+    Timestamp, 
+    ActionType, 
+    Application,   
+    ApplicationId,   
+    UserAgent, 
+    ISP, 
+    AccountObjectId,   
+    AppName=ObjectName,   
+    OauthApplicationId=appId,   
+    RawEventData ) on AccountObjectId   
+| where isnotempty(ActionType) 
