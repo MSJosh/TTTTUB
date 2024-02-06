@@ -1,10 +1,10 @@
 **Microsoft Entra ID Protection**
 - Entra ID Identity Protection detects the described threats with the following alerts:
 
-    -Anomalous Token
-    -Unfamiliar sign-in properties
-    -Anonymous IP address
-    -Verified threat actor IP
+    - Anomalous Token
+    - Unfamiliar sign-in properties
+    - Anonymous IP address
+    - Verified threat actor IP
 
 **Microsoft Defender for Cloud Apps**
 - Using Microsoft Defender for Cloud Apps connectors especially for Azure, Microsoft 365 Defender raises the following alerts:
