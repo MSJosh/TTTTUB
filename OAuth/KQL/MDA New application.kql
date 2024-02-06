@@ -1,0 +1,15 @@
+CloudAppEvents 
+// Filtering events based on specific ActionTypes
+| where ActionType in ("Add application.", "Add service principal.") 
+// Expanding the modifiedProperties array and filtering for events related to "AppAddress"
+| mvexpand modifiedProperties = RawEventData.ModifiedProperties 
+| where modifiedProperties.Name == "AppAddress" 
+// Extracting and transforming the AppAddress from the modifiedProperties
+| extend AppAddress = tolower(extract('\"Address\":\"(.*)\",', 1, tostring(modifiedProperties.NewValue))) 
+// Expanding the ExtendedProperties array and filtering for events related to "additionalDetails"
+| mvexpand ExtendedProperties = RawEventData.ExtendedProperties 
+| where ExtendedProperties.Name == "additionalDetails" 
+// Extracting and transforming the OAuthApplicationId from the ExtendedProperties
+| extend OAuthApplicationId = tolower(extract('\"AppId\":\"(.*)\"', 1, tostring(ExtendedProperties.Value)))
+// Projecting the final result with selected columns
+| project TimeGenerated, AccountType, ObjectName, AccountDisplayName, ActionType, OAuthApplicationId
