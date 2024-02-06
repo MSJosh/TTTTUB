@@ -1,0 +1,12 @@
+//Utilizing MDA/MCAS to access unified logs.  
+
+CloudAppEvents 
+  | where Timestamp >= ago(30d) //Change timestamp if creating analytic rule
+  | where ActionType == "MailItemsAccessed" 
+  | where RawEventData has "ClientAppId" 
+  | where RawEventData has "00000003-0000-0000-c000-000000000000" // performance check 
+  | extend rawData = parse_json(RawEventData) 
+  | extend AppId = tostring(parse_json(rawData.AppId)) 
+  | extend OAuthAppId = tostring(parse_json(rawData.ClientAppId)) // extract OAuthAppId 
+  | where AppId == "00000003-0000-0000-c000-000000000000"
+  | where AccountDisplayName != "appname" //add or remove if you have approved applications that you access via Graph.
