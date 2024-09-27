@@ -1,6 +1,14 @@
+// Filter SigninLogs to include only entries from the last 30 days
 SigninLogs
 | where TimeGenerated > ago(30d)
-| summarize arg_max(TimeGenerated, UserPrincipalName, UserId, IPAddress, Location, ResultType) by Id
-| where ResultType in(50074, 500121)
-| summarize FailureCount=count(), FirstFailure=min(TimeGenerated), MostRecentFailure=max(TimeGenerated), UPN=make_set(UserPrincipalName), Countries=make_set(Location), IPAddresses=make_set(IPAddress) by bin(TimeGenerated, 1h), UserId
-| where FailureCount > 5
+| summarize arg_max(TimeGenerated, UserPrincipalName, UserId, IPAddress, Location, ResultType) by Id // Get the most recent log entry for each Id, including relevant details
+| where ResultType in(50074, 500121)// Filter to include only specific ResultTypes indicating failure
+| summarize // Summarize failure details by hour and UserId
+    FailureCount = count(), // Count of failures
+    FirstFailure = min(TimeGenerated), // Time of the first failure
+    MostRecentFailure = max(TimeGenerated), // Time of the most recent failure
+    UPN = make_set(UserPrincipalName), // Set of UserPrincipalNames
+    Countries = make_set(Location), // Set of Locations
+    IPAddresses = make_set(IPAddress) // Set of IPAddresses
+    by bin(TimeGenerated, 1h), UserId
+| where FailureCount > 5 // Filter to include only users with more than 5 failures
