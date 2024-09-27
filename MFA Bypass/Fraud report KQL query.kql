@@ -1,0 +1,7 @@
+AuditLogs
+| where TimeGenerated > ago(14d)
+| where OperationName in ("Fraud reported - user is blocked for MFA","Fraud reported - no action taken")
+| extend UserPrincipalName = tolower(tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName))
+| extend UserId = tolower(tostring(parse_json(tostring(InitiatedBy.user)).id))
+| extend AuthenticationMethod = tostring(AdditionalDetails[0].value)
+| project TimeGenerated, Id, UserPrincipalName, AuthenticationMethod, UserId
