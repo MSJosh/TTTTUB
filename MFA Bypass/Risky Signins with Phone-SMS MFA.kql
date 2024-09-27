@@ -1,0 +1,9 @@
+AADUserRiskEvents
+| where TimeGenerated > ago(30d)
+| summarize arg_max(TimeGenerated, RiskEventType, RiskLevel, RiskState) by CorrelationId
+| join kind=inner (SigninLogs
+| mv-expand AuthFields=parse_json(AuthenticationDetails)
+| extend AuthenticationMethod = tostring(AuthFields.authenticationMethod)
+| where AuthenticationMethod =~ 'Text message' or AuthenticationMethod startswith "Phone call"
+| summarize arg_max(TimeGenerated, UserPrincipalName, AuthenticationMethod, IPAddress, DeviceDetail, Location, ResultType, ResultDescription) by CorrelationId) on CorrelationId
+
