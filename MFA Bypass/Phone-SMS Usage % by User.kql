@@ -1,9 +1,14 @@
 SigninLogs
-| where TimeGenerated > ago(30d) and ResultType == 0
-| mv-expand AuthFields=parse_json(AuthenticationDetails)
-| extend AuthenticationMethod = tostring(AuthFields.authenticationMethod)
-| where AuthenticationMethod !in~ ("Password","Previously satisfied","")
-| summarize MFACount=count(), PhoneMFACount=countif(AuthenticationMethod =~ 'Text message' or AuthenticationMethod startswith "Phone call"), OtherMFACount=countif(AuthenticationMethod !~ 'Text message' and AuthenticationMethod !startswith "Phone call"), MethodsUsed=make_set(AuthenticationMethod), MostRecentPhoneMFA=maxif(TimeGenerated, AuthenticationMethod =~ 'Text message' or AuthenticationMethod startswith "Phone call") by UserPrincipalName
-| where PhoneMFACount > 0
-| extend PhoneMFAPercent = toreal(PhoneMFACount) / toreal(MFACount)
-
+| where TimeGenerated > ago(30d) and ResultType == 0 // Filter logs from the last 30 days where the result type is 0 (successful sign-ins)
+| mv-expand AuthFields=parse_json(AuthenticationDetails)// Expand the AuthenticationDetails JSON array into multiple records
+| extend AuthenticationMethod = tostring(AuthFields.authenticationMethod)// Extract the authentication method from the expanded records
+| where AuthenticationMethod !in~ ("Password","Previously satisfied","")// Filter out records where the authentication method is "Password", "Previously satisfied", or empty
+| summarize // Summarize the data by user, counting the total MFA attempts, phone MFA attempts, other MFA attempts, listing the methods used, and finding the most recent phone MFA attempt
+    MFACount = count(), 
+    PhoneMFACount = countif(AuthenticationMethod =~ 'Text message' or AuthenticationMethod startswith "Phone call"), 
+    OtherMFACount = countif(AuthenticationMethod !~ 'Text message' and AuthenticationMethod !startswith "Phone call"), 
+    MethodsUsed = make_set(AuthenticationMethod), 
+    MostRecentPhoneMFA = maxif(TimeGenerated, AuthenticationMethod =~ 'Text message' or AuthenticationMethod startswith "Phone call") 
+    by UserPrincipalName
+| where PhoneMFACount > 0 // Calculate the percentage of phone MFA attempts out of total MFA attempts
+| extend PhoneMFAPercent = toreal(PhoneMFACount) / toreal(MFACount) // Calculate the percentage of phone MFA attempts out of total MFA attempts
