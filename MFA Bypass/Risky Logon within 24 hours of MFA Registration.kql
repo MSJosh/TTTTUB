@@ -1,12 +1,12 @@
 AADUserRiskEvents
-| where TimeGenerated > ago(30d)
-| summarize arg_max(TimeGenerated, *) by CorrelationId
+| where TimeGenerated > ago(30d) // Filter events from the last 30 days
+| summarize arg_max(TimeGenerated, *) by CorrelationId // Get the most recent event for each CorrelationId
 | join kind=inner (AuditLogs
-| where TimeGenerated > ago(30d)
-| where Category == "UserManagement" and OperationName in~ ("User registered security info","User started security info registration","User registered all required security info")
-| extend IPAddress = tostring(InitiatedBy.user.ipAddress), TargetId = tostring(TargetResources[0].id)
-| extend MFALocation = geo_info_from_ip_address(IPAddress)) on $left.UserId == $right.TargetId
-| extend RegistrationDelta = (TimeGenerated1 - TimeGenerated) / 1h
-| where RegistrationDelta between (-24 .. 24)
-| project RiskEventTime=TimeGenerated, MFARegistrationTime=TimeGenerated1, UserPrincipalName, RiskEventType, RiskDetail, RiskLevel, RiskState, AdditionalInfo, OperationName, MFAResult=ResultDescription, Result, MFAIP=IPAddress, SigninIP=IpAddress, RegistrationDelta, SigninLocation=Location, MFALocation
-
+    | where TimeGenerated > ago(30d) // Filter logs from the last 30 days
+    | where Category == "UserManagement" and OperationName in~ ("User registered security info", "User started security info registration", "User registered all required security info") // Filter for specific user management operations
+    | extend IPAddress = tostring(InitiatedBy.user.ipAddress), TargetId = tostring(TargetResources.id) // Extract IP address and target ID
+    | extend MFALocation = geo_info_from_ip_address(IPAddress) // Get MFA location from IP address
+) on $left.UserId == $right.TargetId // Join on UserId and TargetId
+| extend RegistrationDelta = (TimeGenerated1 - TimeGenerated) / 1h // Calculate the time difference in hours
+| where RegistrationDelta between (-24 .. 24) // Filter for events within a 24-hour window
+| project RiskEventTime = TimeGenerated, MFARegistrationTime = TimeGenerated1, UserPrincipalName, RiskEventType, RiskDetail, RiskLevel, RiskState, AdditionalInfo, OperationName, MFAResult = ResultDescription, Result, MFAIP = IPAddress, SigninIP = IpAddress, RegistrationDelta, SigninLocation = Location, MFALocation // Select and rename columns
