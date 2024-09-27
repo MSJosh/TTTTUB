@@ -1,0 +1,10 @@
+BehaviorAnalytics
+| where TimeGenerated > ago(14d)
+| where EventSource == "Azure AD" and ActionType == "Sign-in"
+| where InvestigationPriority > 0
+| mv-apply ActivityInsights to typeof(dynamic) on (
+    mv-expand kind=array ActivityInsights
+    | summarize Insights = make_set_if(ActivityInsights[0], ActivityInsights[1] == true)
+    | where array_length(Insights) > 0 
+)
+| project TimeGenerated, UserPrincipalName, InvestigationPriority, Insights, ActionType,  SourceRecordId, SourceIPAddress, SourceIPLocation
