@@ -1,0 +1,9 @@
+SigninLogs
+| where TimeGenerated > ago(30d) and ResultType == 0
+| mv-expand AuthFields=parse_json(AuthenticationDetails)
+| extend AuthenticationMethod = tostring(AuthFields.authenticationMethod)
+| where AuthenticationMethod !in~ ("Password","Previously satisfied","")
+| summarize MFACount=count(), PhoneMFACount=countif(AuthenticationMethod =~ 'Text message' or AuthenticationMethod startswith "Phone call"), OtherMFACount=countif(AuthenticationMethod !~ 'Text message' and AuthenticationMethod !startswith "Phone call"), MethodsUsed=make_set(AuthenticationMethod), MostRecentPhoneMFA=maxif(TimeGenerated, AuthenticationMethod =~ 'Text message' or AuthenticationMethod startswith "Phone call") by UserPrincipalName
+| where PhoneMFACount > 0
+| extend PhoneMFAPercent = toreal(PhoneMFACount) / toreal(MFACount)
+
