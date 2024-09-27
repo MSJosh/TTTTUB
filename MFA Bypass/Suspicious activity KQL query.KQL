@@ -1,0 +1,7 @@
+AuditLogs
+| where TimeGenerated > ago(90d)
+| where OperationName == "Suspicious activity reported"
+
+AADUserRiskEvents
+| where TimeGenerated > ago(90d)
+| where RiskEventType == "userReportedSuspiciousActivity"
