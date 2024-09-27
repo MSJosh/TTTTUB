@@ -1,12 +1,14 @@
-let excludeTrustedLocations = false; //Only exclude if MFA is not expected
+let excludeTrustedLocations = true; //Only exclude if MFA is not expected
 let excludeB2B = true; //Exclude to constrain the analysis to non B2B auth attempts
 SigninLogs
 | where TimeGenerated > ago(30d)
 | where ResultType == 0
 | where AuthenticationRequirement <> "multiFactorAuthentication"
+| extend isCompliant = tostring(DeviceDetail.isCompliant)
 | extend CAPsApplied = array_length(ConditionalAccessPolicies)
 | where CAPsApplied > 0
 | where NetworkLocationDetails !contains "trustedNamedLocation" or not(excludeTrustedLocations)
 | where HomeTenantId == AADTenantId or not(excludeB2B)
+| where isCompliant != "true" //change to false to get compliant devices not MFA
 | where AppId <> "cb1056e2-e479-49de-ae31-7812af012ed8" //exclude AAD Connect
-| project TimeGenerated, UserPrincipalName, IPAddress, AppDisplayName, ResourceDisplayName, AuthenticationRequirement, ConditionalAccessPolicies, DeviceDetail, Location, NetworkLocationDetails
+| project TimeGenerated, UserPrincipalName, IPAddress, AppDisplayName, ResourceDisplayName, AuthenticationRequirement, ConditionalAccessPolicies, DeviceDetail, Location, NetworkLocationDetails, isCompliant
