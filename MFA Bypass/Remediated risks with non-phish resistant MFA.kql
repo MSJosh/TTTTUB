@@ -1,9 +1,10 @@
-let NonPhishResistantMFA = dynamic(["Mobile app notification","OATH verification code","Text message","Phone call approval (Authentication phone)","Phone call approval (Alternate phone)","Passwordless phone sign-in","Phone call approval (Office phone)","Passwordless Microsoft Authenticator","Other"]);
+let NonPhishResistantMFA = dynamic(["Mobile app notification","OATH verification code","Text message","Phone call approval (Authentication phone)","Phone call approval (Alternate phone)","Passwordless phone sign-in","Phone call approval (Office phone)","Passwordless Microsoft Authenticator","Other"]); // Define non-phish-resistant MFA methods
 SigninLogs
-| where TimeGenerated > ago(14d)
-| where RiskEventTypes contains "unfamiliarFeatures"
-| where RiskState == "remediated"
-| mv-apply AuthenticationDetails = todynamic(AuthenticationDetails) to typeof(dynamic) on (
-    where AuthenticationDetails.authenticationMethod has_any (NonPhishResistantMFA)
-    | extend Method = AuthenticationDetails.authenticationMethod
-) | project TimeGenerated, UserPrincipalName, Method
+| where TimeGenerated > ago(14d) // Filter logs for the last 14 days
+| where RiskEventTypes contains "unfamiliarFeatures" // Filter for specific risk events
+| where RiskState == "remediated" // Filter for remediated risk states
+| mv-apply AuthenticationDetails = todynamic(AuthenticationDetails) to typeof(dynamic) on ( // Expand AuthenticationDetails
+    where AuthenticationDetails.authenticationMethod has_any (NonPhishResistantMFA) // Filter for non-phish-resistant MFA methods
+    | extend Method = AuthenticationDetails.authenticationMethod // Extract the authentication method
+) 
+| project TimeGenerated, UserPrincipalName, Method // Project relevant columns
