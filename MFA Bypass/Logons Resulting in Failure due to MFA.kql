@@ -1,0 +1,6 @@
+SigninLogs
+| where TimeGenerated > ago(30d)
+| summarize arg_max(TimeGenerated, UserPrincipalName, UserId, IPAddress, Location, ResultType) by Id
+| where ResultType in(50074, 500121)
+| summarize FailureCount=count(), FirstFailure=min(TimeGenerated), MostRecentFailure=max(TimeGenerated), UPN=make_set(UserPrincipalName), Countries=make_set(Location), IPAddresses=make_set(IPAddress) by bin(TimeGenerated, 1h), UserId
+| where FailureCount > 5
