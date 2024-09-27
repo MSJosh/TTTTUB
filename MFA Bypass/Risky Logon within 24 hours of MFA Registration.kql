@@ -1,0 +1,12 @@
+AADUserRiskEvents
+| where TimeGenerated > ago(30d)
+| summarize arg_max(TimeGenerated, *) by CorrelationId
+| join kind=inner (AuditLogs
+| where TimeGenerated > ago(30d)
+| where Category == "UserManagement" and OperationName in~ ("User registered security info","User started security info registration","User registered all required security info")
+| extend IPAddress = tostring(InitiatedBy.user.ipAddress), TargetId = tostring(TargetResources[0].id)
+| extend MFALocation = geo_info_from_ip_address(IPAddress)) on $left.UserId == $right.TargetId
+| extend RegistrationDelta = (TimeGenerated1 - TimeGenerated) / 1h
+| where RegistrationDelta between (-24 .. 24)
+| project RiskEventTime=TimeGenerated, MFARegistrationTime=TimeGenerated1, UserPrincipalName, RiskEventType, RiskDetail, RiskLevel, RiskState, AdditionalInfo, OperationName, MFAResult=ResultDescription, Result, MFAIP=IPAddress, SigninIP=IpAddress, RegistrationDelta, SigninLocation=Location, MFALocation
+
