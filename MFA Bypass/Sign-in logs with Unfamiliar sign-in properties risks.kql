@@ -1,0 +1,6 @@
+SigninLogs
+| where TimeGenerated > ago(14d)
+| where RiskEventTypes contains "unfamiliarFeatures"
+| summarize RiskStates = make_set(RiskState), RiskDetails = make_set_if(RiskDetail, RiskDetail != "none"), arg_max(TimeGenerated,*) by UserId, Id
+| extend State = iif(RiskStates has_any ("remediated","dismissed"), "✅", "⚡")
+| project TimeGenerated, UserPrincipalName, Id, State, RiskStates, RiskDetails, AppDisplayName, IPAddress, Location, UserAgent
