@@ -1,0 +1,6 @@
+AuditLogs
+| where TimeGenerated > ago(90d)
+| where Category == "UserManagement"
+| where OperationName in~ ("User registered security info","User started security info registration","User registered all required security info")
+| project TimeGenerated, OperationName, ResultDescription, Result, TargetUPN = tostring(TargetResources[0].userPrincipalName), TargetId = tostring(TargetResources[0].id), IPAddress = tostring(InitiatedBy.user.ipAddress)
+| extend GeoInfo = geo_info_from_ip_address(IPAddress)
