@@ -1,0 +1,9 @@
+let NonPhishResistantMFA = dynamic(["Mobile app notification","OATH verification code","Text message","Phone call approval (Authentication phone)","Phone call approval (Alternate phone)","Passwordless phone sign-in","Phone call approval (Office phone)","Passwordless Microsoft Authenticator","Other"]);
+SigninLogs
+| where TimeGenerated > ago(14d)
+| where RiskEventTypes contains "unfamiliarFeatures"
+| where RiskState == "remediated"
+| mv-apply AuthenticationDetails = todynamic(AuthenticationDetails) to typeof(dynamic) on (
+    where AuthenticationDetails.authenticationMethod has_any (NonPhishResistantMFA)
+    | extend Method = AuthenticationDetails.authenticationMethod
+) | project TimeGenerated, UserPrincipalName, Method
