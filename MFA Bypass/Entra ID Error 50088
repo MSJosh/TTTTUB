@@ -1,0 +1,4 @@
+//50088 - Limit on telecom MFA calls reached. Please try again in a few minutes.
+SigninLogs
+| where TimeGenerated > ago(90d)
+| where ResultType == 50088
