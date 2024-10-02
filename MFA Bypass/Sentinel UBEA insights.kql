@@ -1,10 +1,10 @@
 BehaviorAnalytics
-| where TimeGenerated > ago(14d)
-| where EventSource == "Azure AD" and ActionType == "Sign-in"
-| where InvestigationPriority > 0
-| mv-apply ActivityInsights to typeof(dynamic) on (
-    mv-expand kind=array ActivityInsights
-    | summarize Insights = make_set_if(ActivityInsights[0], ActivityInsights[1] == true)
-    | where array_length(Insights) > 0 
+| where TimeGenerated > ago(14d) // Filter for events generated in the last 14 days
+| where EventSource == "Azure AD" and ActionType == "Sign-in" // Filter for Azure AD sign-in events
+| where InvestigationPriority > 0 // Filter for events with an investigation priority greater than 0
+| mv-apply ActivityInsights to typeof(dynamic) on ( // Apply the mv-apply operator to expand ActivityInsights
+    mv-expand kind=array ActivityInsights // Expand the ActivityInsights array
+    | summarize Insights = make_set_if(ActivityInsights, ActivityInsights == true) // Summarize and create a set of Insights where ActivityInsights is true
+    | where array_length(Insights) > 0 // Filter for records where the Insights array is not empty
 )
-| project TimeGenerated, UserPrincipalName, InvestigationPriority, Insights, ActionType,  SourceRecordId, SourceIPAddress, SourceIPLocation
+| project TimeGenerated, UserPrincipalName, InvestigationPriority, Insights, ActionType, SourceRecordId, SourceIPAddress, SourceIPLocation // Project the desired columns
